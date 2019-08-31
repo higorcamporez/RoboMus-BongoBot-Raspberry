@@ -1,18 +1,13 @@
-// C program to display hostname 
-// and IP address 
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <unistd.h> 
-#include <errno.h> 
-#include <netdb.h> 
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
+#include <string.h> 
+
 #include <arpa/inet.h> 
+#include <iostream>
+#include <sys/types.h>
+#include <ifaddrs.h>
 
 using namespace std;
 
-string getIPAddress(){
+int main(){
     string ipAddress="Unable to get IP Address";
     struct ifaddrs *interfaces = NULL;
     struct ifaddrs *temp_addr = NULL;
@@ -25,7 +20,7 @@ string getIPAddress(){
         while(temp_addr != NULL) {
             if(temp_addr->ifa_addr->sa_family == AF_INET) {
                 // Check if interface is en0 which is the wifi connection on the iPhone
-                if(strcmp(temp_addr->ifa_name, "en0")){
+                if(strcmp(temp_addr->ifa_name, "wlan0") == 0){
                     ipAddress=inet_ntoa(((struct sockaddr_in*)temp_addr->ifa_addr)->sin_addr);
                 }
             }
@@ -34,11 +29,8 @@ string getIPAddress(){
     }
     // Free memory
     freeifaddrs(interfaces);
-    return ipAddress;
+    cout<<ipAddress;
+    return 0;
 }
 
-int main(){
-	printf("ip = %s", getIPAddress());
-	return 0;
-}
 
