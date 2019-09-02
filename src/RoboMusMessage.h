@@ -1,19 +1,19 @@
 #include <iostream>
-
+#include <stdint.h>
 #include "Action.h"
-
+#include "osc/OscTypes.h"
 
 using namespace std;
 
 class RoboMusMessage{
 	private:
-		uint64 timetag;
+		osc::uint64 timetag;
 		long messageId;
-		Action action;
+		Action *action;
 	
 	public:
-		RoboMusMessage(uint64 timetag, long messageId, Action action);
+		RoboMusMessage(osc::uint64 timetag, long messageId, Action *action);
 		void play(void);
-		uint64 getTimetag(void);
+		osc::uint64 getTimetag(void);
 		long getMessageId(void);
-}
+};

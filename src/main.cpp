@@ -1,14 +1,12 @@
 
-#include "Instrument.h"
+#include "BongoBot.h"
 
 
 int main(){
 	
-	Instrument *i = new Instrument("bongo","/bongo",1234,"192.168.2.5");
+	BongoBot *bongoBot = new BongoBot();
 	
-	cout<<i->getName()<<endl;
-	i->setName("bongobot");
-	cout<<i->getName()<<endl;
-	
+	cout<<bongoBot->getIpAddress()<<endl;
+	bongoBot->sendHandshake();
 	return 0;
 }

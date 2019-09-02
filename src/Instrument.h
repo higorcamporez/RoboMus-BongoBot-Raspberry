@@ -17,6 +17,7 @@ class Instrument{
 		string ip;
 	
 	public:
+		Instrument();
 		Instrument(string name, string OscAddress,
                       int receivePort, string ip);
 		string getName();
@@ -25,5 +26,6 @@ class Instrument{
 		void setOscAddress(string myOscAddress);
 		string getServerOscAddress();
 		string getServerIpAddress();
+		string getIpAddress();
 		
 };

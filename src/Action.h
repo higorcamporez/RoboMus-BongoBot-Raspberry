@@ -8,4 +8,4 @@ class Action{
 		virtual void play(void) = 0;
 		virtual ~Action(){}
 
-}
+};

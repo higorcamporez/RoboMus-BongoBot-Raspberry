@@ -1,5 +1,8 @@
 #include "Instrument.h"
 
+Instrument::Instrument(){
+}
+
 Instrument::Instrument(string name, string oscAddress,
                       int receivePort, string ip){
 
@@ -32,5 +35,9 @@ string Instrument::getServerOscAddress() {
 
 string Instrument::getServerIpAddress() {
 	return this->serverIpAddress;
+}
+
+string Instrument::getIpAddress() {
+	return this->ip;
 }
 
