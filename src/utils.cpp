@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <sys/time.h>
 
 namespace utils{
 	string getIpAddress(){
@@ -25,6 +26,18 @@ namespace utils{
 		freeifaddrs(interfaces);
 		//cout<<ipAddress;
 		return ipAddress;
+	}
+	
+	unsigned long long getCurrentTimeMillis(){
+		struct timeval tv;
+
+		gettimeofday(&tv, NULL);
+
+		unsigned long long millisecondsSinceEpoch =
+		(unsigned long long)(tv.tv_sec) * 1000 +
+		(unsigned long long)(tv.tv_usec) / 1000;
+		
+		return millisecondsSinceEpoch;
 	}
 
 }

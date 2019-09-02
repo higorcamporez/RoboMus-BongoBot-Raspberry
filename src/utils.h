@@ -9,5 +9,6 @@ using namespace std;
 
 namespace utils{
 	string getIpAddress();
+	unsigned long long getCurrentTimeMillis();
 }
 

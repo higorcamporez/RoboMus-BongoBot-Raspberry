@@ -1,5 +1,4 @@
 #include <iostream>
-#include <stdint.h>
 #include "Action.h"
 #include "osc/OscTypes.h"
 
