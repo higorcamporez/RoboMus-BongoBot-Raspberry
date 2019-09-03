@@ -6,13 +6,14 @@ using namespace std;
 
 class RoboMusMessage{
 	private:
-		osc::uint64 timetag;
+		unsigned long long timetag;
 		long messageId;
 		Action *action;
 	
 	public:
-		RoboMusMessage(osc::uint64 timetag, long messageId, Action *action);
+		RoboMusMessage(unsigned long long timetag, long messageId, Action *action);
+		~RoboMusMessage();
 		void play(void);
-		osc::uint64 getTimetag(void);
+		unsigned long long getTimetag(void);
 		long getMessageId(void);
 };

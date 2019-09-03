@@ -8,7 +8,7 @@ int main(){
 	
 	BongoBot *bongoBot = new BongoBot();
 	
-	cout<<bongoBot->getIpAddress()<<endl;
+	cout<<"-"<<bongoBot->getServerIpAddress()<<"-"<<bongoBot->getServerIpAddress().length()<<endl;
 	bongoBot->sendHandshake();
 	while(true);
 	return 0;

@@ -18,6 +18,9 @@ BongoBot::BongoBot(){
 	std::thread t(&BongoBot::messageController, this);
 	t.detach();
 	
+	std::thread t2(&BongoBot::timeSynchronizer, this);
+	t2.detach();
+	
 }
 
 BongoBot::~BongoBot(){
@@ -29,7 +32,7 @@ void BongoBot::sendHandshake(){
 	char buffer[IP_MTU_SIZE];
     osc::OutboundPacketStream p( buffer, IP_MTU_SIZE );
     //IpEndpointName( IpEndpointName::ANY_ADDRESS, PORT )
-	UdpTransmitSocket socket(  IpEndpointName("192.168.0.103",1234)  );
+	UdpTransmitSocket socket(  IpEndpointName("172.20.24.200",1234)  );
 
     p.Clear();
    
@@ -71,6 +74,7 @@ void BongoBot::receiveHandshake(osc::ReceivedMessageArgumentStream args){
 	
 	std::cout << "received '/handshake' message with arguments: "
                     << a1 << " " << a2 << " " << a3 << " " << a4 << "\n";
+    this->syncTime();
 }
 
 void BongoBot::ProcessMessage( const osc::ReceivedMessage& m, 
@@ -140,17 +144,12 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			
 			args >> a1 >> a2 >> osc::EndMessage;
 			
-			unsigned long long t =  (b.TimeTag())>>32;
-			t = t - NTP_TIMESTAMP_DIFF;
-			unsigned long us =  ((unsigned long)(b.TimeTag()&0xffffffff));
-			us = ((double)us/0xffffffff)*1000000;
-			//long long time = t*1000000 + us;
 			unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
-			std::cout<<"/playBongo"<<" id = "<<a1<<"b.TimeTag() = "<<t<<" us="<<time<<std::endl;
+			std::cout<<"/playBongo"<<" id = "<<" TimeTag="<<time<<std::endl;
 			
 			Action *a = new PlayBongo();
 			RoboMusMessage *rmm = new RoboMusMessage(
-											b.TimeTag(),
+											time,
 											a1,
 											a);
 			this->insertMessage(rmm);
@@ -169,10 +168,29 @@ void BongoBot::messageController(){
 	while(true){
 		if(this->messages->size() > 0){
 			RoboMusMessage* rmm = (*this->messages->begin());
-			//cout<<rmm->getTimetag()<<" "<<utils::getCurrentTimeMillis()<<endl;
-			if(rmm->getTimetag() < utils::getCurrentTimeMillis()){
+			//cout<<rmm->getTimetag()<<" "<<utils::getCurrentTimeMicros()<<endl;
+			if(rmm->getTimetag() < utils::getCurrentTimeMicros()){
 				rmm->play();
-				std::cout<<"play()"<<std::endl;
+				delete rmm;
+				this->messages->erase(this->messages->begin());
+			}
+		}
+	}
+}
+
+void BongoBot::syncTime(){
+	utils::NTPSynchronizer(this->getServerIpAddress());
+}
+
+void BongoBot::timeSynchronizer(){
+	long long t = 0;
+	while(true){
+		
+		while(utils::getCurrentTimeMillis() - t > 20000){
+			if(this->getServerIpAddress().length() > 0){
+				this->syncTime();
+				t = utils::getCurrentTimeMillis();
+				cout<<"t="<<t<<endl;
 			}
 		}
 	}

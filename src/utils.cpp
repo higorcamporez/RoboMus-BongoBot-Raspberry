@@ -1,7 +1,4 @@
 #include "utils.h"
-#include <sys/time.h>
-
-#define NTP_TIMESTAMP_DIFF   (2208988800) 
 
 namespace utils{
 	string getIpAddress(){
@@ -60,5 +57,13 @@ namespace utils{
 		unsigned long us =  ((unsigned long)(timestamp&0xffffffff));
 		us = ((double)us/0xffffffff)*1000000;
 		long long time = t*1000000 + us;
+		return time;
+	}
+	
+	void NTPSynchronizer(string ntpServerIp){
+		system("sudo timedatectl set-ntp 0");
+		
+		system(("sudo ntpdate "+ntpServerIp).c_str());
+		
 	}
 }

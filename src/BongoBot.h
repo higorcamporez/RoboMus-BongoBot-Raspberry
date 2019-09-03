@@ -29,5 +29,7 @@ class BongoBot : public Instrument, public osc::OscPacketListener {
 		void playBongo(osc::ReceivedMessageArgumentStream args);
 		void insertMessage(RoboMusMessage*);
 		void messageController();
+		void syncTime();
+		void timeSynchronizer();
 		
 };

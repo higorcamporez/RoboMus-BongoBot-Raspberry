@@ -1,6 +1,6 @@
 #include "RoboMusMessage.h"
 
-RoboMusMessage::RoboMusMessage(osc::uint64 timetag,
+RoboMusMessage::RoboMusMessage(unsigned long long timetag,
 								long messageId, 
 								Action *action){
 	this->timetag = timetag;
@@ -8,12 +8,16 @@ RoboMusMessage::RoboMusMessage(osc::uint64 timetag,
 	this->action = action;
 
 }
-		
+
+RoboMusMessage::~RoboMusMessage(){
+	delete this->action;
+}
+
 void RoboMusMessage::play(void){
 	this->action->play();
 }
 
-osc::uint64 RoboMusMessage::getTimetag(void){
+unsigned long long RoboMusMessage::getTimetag(void){
 	return this->timetag;
 }
 
