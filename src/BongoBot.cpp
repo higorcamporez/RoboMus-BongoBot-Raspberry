@@ -1,5 +1,5 @@
 #include "BongoBot.h"
-
+#define NTP_TIMESTAMP_DIFF   (2208988800) 
 #define IP_MTU_SIZE 1536
 
 
@@ -16,8 +16,8 @@ BongoBot::BongoBot(){
 	this->messages = new vector<RoboMusMessage*> ;
 	
 	std::thread t(&BongoBot::messageController, this);
-	//t.join();
-	cout<<"pasosu join"<<endl;
+	t.detach();
+	
 }
 
 BongoBot::~BongoBot(){
@@ -29,7 +29,7 @@ void BongoBot::sendHandshake(){
 	char buffer[IP_MTU_SIZE];
     osc::OutboundPacketStream p( buffer, IP_MTU_SIZE );
     //IpEndpointName( IpEndpointName::ANY_ADDRESS, PORT )
-	UdpTransmitSocket socket(  IpEndpointName("172.20.24.212",1234)  );
+	UdpTransmitSocket socket(  IpEndpointName("192.168.0.103",1234)  );
 
     p.Clear();
    
@@ -140,7 +140,13 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			
 			args >> a1 >> a2 >> osc::EndMessage;
 			
-			//std::cout<<"/playBongo"<<"b.TimeTag() "<<b.TimeTag()<<std::endl;
+			unsigned long long t =  (b.TimeTag())>>32;
+			t = t - NTP_TIMESTAMP_DIFF;
+			unsigned long us =  ((unsigned long)(b.TimeTag()&0xffffffff));
+			us = ((double)us/0xffffffff)*1000000;
+			//long long time = t*1000000 + us;
+			unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
+			std::cout<<"/playBongo"<<" id = "<<a1<<"b.TimeTag() = "<<t<<" us="<<time<<std::endl;
 			
 			Action *a = new PlayBongo();
 			RoboMusMessage *rmm = new RoboMusMessage(
@@ -163,7 +169,7 @@ void BongoBot::messageController(){
 	while(true){
 		if(this->messages->size() > 0){
 			RoboMusMessage* rmm = (*this->messages->begin());
-			cout<<rmm->getTimetag()<<" "<<utils::getCurrentTimeMillis()<<endl;
+			//cout<<rmm->getTimetag()<<" "<<utils::getCurrentTimeMillis()<<endl;
 			if(rmm->getTimetag() < utils::getCurrentTimeMillis()){
 				rmm->play();
 				std::cout<<"play()"<<std::endl;

@@ -1,6 +1,8 @@
 #include "utils.h"
 #include <sys/time.h>
 
+#define NTP_TIMESTAMP_DIFF   (2208988800) 
+
 namespace utils{
 	string getIpAddress(){
 		string ipAddress="Unable to get IP Address";
@@ -39,5 +41,24 @@ namespace utils{
 		
 		return millisecondsSinceEpoch;
 	}
+	
+	unsigned long long getCurrentTimeMicros(){
+		struct timeval tv;
 
+		gettimeofday(&tv, NULL);
+
+		unsigned long long microsecondsSinceEpoch =
+		(unsigned long long)(tv.tv_sec) * 1000000 +
+		(unsigned long long)(tv.tv_usec);
+		
+		return microsecondsSinceEpoch;
+	}
+
+	unsigned long long convertNTPtoUTC(unsigned long long timestamp){
+		unsigned long long t =  (timestamp)>>32;
+		t = t - NTP_TIMESTAMP_DIFF;
+		unsigned long us =  ((unsigned long)(timestamp&0xffffffff));
+		us = ((double)us/0xffffffff)*1000000;
+		long long time = t*1000000 + us;
+	}
 }

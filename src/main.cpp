@@ -10,6 +10,6 @@ int main(){
 	
 	cout<<bongoBot->getIpAddress()<<endl;
 	bongoBot->sendHandshake();
-	
+	while(true);
 	return 0;
 }
