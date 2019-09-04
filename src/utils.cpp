@@ -62,7 +62,7 @@ namespace utils{
 	
 	void NTPSynchronizer(string ntpServerIp){
 		system("sudo timedatectl set-ntp 0");
-		
+		system("sudo service ntp stop");
 		system(("sudo ntpdate "+ntpServerIp).c_str());
 		
 	}

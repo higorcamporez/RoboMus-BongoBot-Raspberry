@@ -32,18 +32,18 @@ all: objFolder $(PROJ_NAME)
 
 $(PROJ_NAME): $(OBJ)
 	@ echo 'Building binary using GCC linker: $@'
-	$(CC) $^ -o $@  -L/usr/local/lib -l:liboscpack.so -std=c++11 -pthread
+	$(CC) $^ -o $@  -L/usr/local/lib -l:liboscpack.so -std=c++11 -pthread -lwiringPi
 	@ echo 'Finished building binary: $@'
 	@ echo ' '
 #-L/usr/local/lib -lliboscpack.so.1.1.0
 ./objects/%.o: ./src/%.cpp ./src/%.h
 	@ echo 'Building target using GCC compiler: $<'
-	$(CC) $< $(CC_FLAGS) -o $@ -I /usr/local/include/oscpack/ -L/usr/local/lib -l:liboscpack -std=c++11 -pthread
+	$(CC) $< $(CC_FLAGS) -o $@ -I /usr/local/include/oscpack/ -L/usr/local/lib -l:liboscpack -std=c++11 -lwiringPi -pthread
 	@ echo ' '
 
 ./objects/main.o: ./src/main.cpp $(H_SOURCE)
 	@ echo 'Building target using G++ compiler: $<'
-	$(CC) $< $(CC_FLAGS) -o $@ -I /usr/local/include/oscpack/ -L/usr/local/lib -l:liboscpack -std=c++11 -pthread
+	$(CC) $< $(CC_FLAGS) -o $@ -I /usr/local/include/oscpack/ -L/usr/local/lib -l:liboscpack -std=c++11 -lwiringPi -pthread
 	@ echo ' '
 
 objFolder:

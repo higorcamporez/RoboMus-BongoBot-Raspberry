@@ -1,6 +1,6 @@
 #include "BongoBot.h"
 #define NTP_TIMESTAMP_DIFF   (2208988800) 
-#define IP_MTU_SIZE 1536
+#define IP_MTU_SIZE 1500
 
 
 BongoBot::BongoBot(){
@@ -31,8 +31,6 @@ void BongoBot::sendHandshake(){
 	
 	char buffer[IP_MTU_SIZE];
     osc::OutboundPacketStream p( buffer, IP_MTU_SIZE );
-    //IpEndpointName( IpEndpointName::ANY_ADDRESS, PORT )
-	UdpTransmitSocket socket(  IpEndpointName("172.20.24.200",1234)  );
 
     p.Clear();
    
@@ -45,18 +43,53 @@ void BongoBot::sendHandshake(){
 				<< this->familyType.c_str()
 				<< this->specificProtocol.c_str()
 				<< osc::EndMessage;
-	
-	
     
 				
-    socket.Send( p.Data(), p.Size() );
+
+    ///////////////////////////
+    // meu broadcast
+    int sock;                         /* Socket */
+    struct sockaddr_in broadcastAddr; /* Broadcast address */
+    char broadcastIP[15];             /* IP broadcast address */
+    unsigned short broadcastPort;     /* Server port */
+    int broadcastPermission;          /* Socket opt to set permission to broadcast */
+    unsigned int sendStringLen;       /* Length of string to broadcast */
     
+    strcpy(broadcastIP, "255.255.255.255");            /* First arg:  broadcast IP address */ 
+    broadcastPort = 1234;    /* Second arg:  broadcast port */
+    
+    /* Create socket for sending/receiving datagrams */
+    if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+        printf("socket() failed");
+
+    /* Set socket to allow broadcast */
+    broadcastPermission = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (void *) &broadcastPermission, 
+          sizeof(broadcastPermission)) < 0)
+        printf("setsockopt() failed");
+
+    /* Construct local address structure */
+    memset(&broadcastAddr, 0, sizeof(broadcastAddr));   /* Zero out structure */
+    broadcastAddr.sin_family = AF_INET;                 /* Internet address family */
+    broadcastAddr.sin_addr.s_addr = inet_addr(broadcastIP);/* Broadcast IP address */
+    broadcastAddr.sin_port = htons(broadcastPort);         /* Broadcast port */
+
+    //sendStringLen = strlen(sendString);  /* Find length of sendString */
+
+	/* Broadcast sendString in datagram to clients every 3 seconds*/
+    if (sendto(sock, p.Data(),  p.Size() , 0, (struct sockaddr *) 
+	   &broadcastAddr, sizeof(broadcastAddr)) != p.Size())
+		printf("sendto() sent a different number of bytes than expected");
+
+    
+    /////////////////////////
     UdpListeningReceiveSocket s(
             IpEndpointName( IpEndpointName::ANY_ADDRESS, this->receivePort ),
             this );
             
     std::cout << "press ctrl-c to end\n";
 	s.RunUntilSigInt();
+	
 }
 
 void BongoBot::receiveHandshake(osc::ReceivedMessageArgumentStream args){
