@@ -2,7 +2,8 @@
 
 
 PlayBongo::PlayBongo(){
-
+	wiringPiSetup();			// Setup the library
+	pinMode(0, OUTPUT);		// Configure GPIO0 as an output
 }
 
 

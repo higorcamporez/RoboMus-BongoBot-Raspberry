@@ -223,7 +223,7 @@ void BongoBot::timeSynchronizer(){
 			if(this->getServerIpAddress().length() > 0){
 				this->syncTime();
 				t = utils::getCurrentTimeMillis();
-				cout<<"t="<<t<<endl;
+				//cout<<"t="<<t<<endl;
 			}
 		}
 	}

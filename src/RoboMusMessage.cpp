@@ -14,6 +14,7 @@ RoboMusMessage::~RoboMusMessage(){
 }
 
 void RoboMusMessage::play(void){
+	//std::cout<<"RoboMusMessage::play(void)";
 	this->action->play();
 }
 
