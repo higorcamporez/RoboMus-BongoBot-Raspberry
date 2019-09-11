@@ -50,7 +50,7 @@ void BongoBot::sendHandshake(){
     // meu broadcast
     int sock;                         /* Socket */
     struct sockaddr_in broadcastAddr; /* Broadcast address */
-    char broadcastIP[15];             /* IP broadcast address */
+    char broadcastIP[16];             /* IP broadcast address */
     unsigned short broadcastPort;     /* Server port */
     int broadcastPermission;          /* Socket opt to set permission to broadcast */
     unsigned int sendStringLen;       /* Length of string to broadcast */
@@ -149,16 +149,18 @@ void BongoBot::ProcessMessage( const osc::ReceivedMessage& m,
 
 void BongoBot::insertMessage(RoboMusMessage *roboMusMessage){
 	//std::cout<<"insertMessage"<<std::endl;
-
+	this->mtx.lock();
 	for (std::vector<RoboMusMessage*>::iterator it = this->messages->begin() ; it != this->messages->end(); ++it){
 		//std::cout << ' ' << (*it)->getTimetag();
+		//std::cout<<"insertMessage"<<std::endl;
 		if((*it)->getTimetag() > roboMusMessage->getTimetag()){
+			
 			this->messages->insert(it, roboMusMessage);	
 			return;	
 		}
 	}
 	this->messages->push_back(roboMusMessage);
-	
+	this->mtx.unlock();
 	
 }
 
@@ -198,16 +200,28 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 
 void BongoBot::messageController(){
 	cout<<"BongoBot::messageController()"<<endl;
+	long long diff;
 	while(true){
+		this->mtx.lock();
 		if(this->messages->size() > 0){
 			RoboMusMessage* rmm = (*this->messages->begin());
 			//cout<<rmm->getTimetag()<<" "<<utils::getCurrentTimeMicros()<<endl;
-			if(rmm->getTimetag() == utils::getCurrentTimeMicros()){
+			//std::cout<<"messageController"<<std::endl;
+			
+			diff = utils::getCurrentTimeMicros() - rmm->getTimetag();
+			
+			if(diff >=0 && diff <= 500){ //500 us
+				
 				rmm->play();
+				delete rmm;
+				this->messages->erase(this->messages->begin());
+			}else if(diff > 500){
+				cout<<"Message"<<rmm->getMessageId()<<"deleted"<<endl;
 				delete rmm;
 				this->messages->erase(this->messages->begin());
 			}
 		}
+		this->mtx.unlock();
 	}
 }
 

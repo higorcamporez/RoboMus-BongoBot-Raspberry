@@ -10,13 +10,14 @@
 #include <iostream>
 #include <vector>
 #include <thread>  
+#include <mutex>         
 
 using namespace std;
 
 class BongoBot : public Instrument, public osc::OscPacketListener {
 	private:
 		vector<RoboMusMessage*> *messages;
-
+		std::mutex mtx;
 	public:
 		BongoBot();
 		~BongoBot();
