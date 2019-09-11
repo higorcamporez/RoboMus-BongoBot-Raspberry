@@ -178,7 +178,7 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			args >> a1 >> a2 >> osc::EndMessage;
 			
 			unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
-			std::cout<<"/playBongo"<<" id = "<<" TimeTag="<<time<<std::endl;
+			std::cout<<"/playBongo"<<" id = "<<a1<<" TimeTag="<<time<<std::endl;
 			
 			Action *a = new PlayBongo();
 			RoboMusMessage *rmm = new RoboMusMessage(
