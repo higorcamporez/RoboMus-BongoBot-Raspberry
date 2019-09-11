@@ -202,7 +202,7 @@ void BongoBot::messageController(){
 		if(this->messages->size() > 0){
 			RoboMusMessage* rmm = (*this->messages->begin());
 			//cout<<rmm->getTimetag()<<" "<<utils::getCurrentTimeMicros()<<endl;
-			if(rmm->getTimetag() < utils::getCurrentTimeMicros()){
+			if(rmm->getTimetag() == utils::getCurrentTimeMicros()){
 				rmm->play();
 				delete rmm;
 				this->messages->erase(this->messages->begin());
