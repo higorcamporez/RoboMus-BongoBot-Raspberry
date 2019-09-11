@@ -210,13 +210,13 @@ void BongoBot::messageController(){
 			
 			diff = utils::getCurrentTimeMicros() - rmm->getTimetag();
 			
-			if(diff >=0 && diff <= 500){ //500 us
+			if(diff >=0 && diff <= 1000){ //1000 us
 				
 				rmm->play();
 				delete rmm;
 				this->messages->erase(this->messages->begin());
-			}else if(diff > 500){
-				cout<<"Message"<<rmm->getMessageId()<<"deleted"<<endl;
+			}else if(diff > 1000){
+				cout<<"Message "<<rmm->getMessageId()<<" deleted"<<endl;
 				delete rmm;
 				this->messages->erase(this->messages->begin());
 			}
