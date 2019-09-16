@@ -21,8 +21,10 @@ class BongoBot : public Instrument, public osc::OscPacketListener {
 		list<RoboMusMessage*> *messages;
 		RoboMusMessage *nextRoboMusMessage;
 		std::mutex mtx;
-		int coutLostMsgs;
-		int coutMsgsArraivedLate;
+		int countLostMsgs;
+		int countMsgsArraivedLate;
+		int lastMsgId;
+		int countLostMsgsNet;
 	public:
 		BongoBot();
 		~BongoBot();

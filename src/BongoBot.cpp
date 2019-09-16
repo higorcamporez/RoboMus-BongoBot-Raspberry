@@ -16,8 +16,10 @@ BongoBot::BongoBot(){
 	this->nextRoboMusMessage = NULL;
 	
 	this->messages = new list<RoboMusMessage*> ;
-	this->coutLostMsgs = 0;
-	this->coutMsgsArraivedLate = 0;
+	this->countLostMsgs = 0;
+	this->countMsgsArraivedLate = 0;
+	this->lastMsgId = 0;
+	this->countLostMsgsNet = 0;
 	
 	std::thread t(&BongoBot::messageController, this);
 	t.detach();
@@ -186,7 +188,15 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			args >> a1 >> a2 >> osc::EndMessage;
 			
 			cout<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;;
-			this->coutMsgsArraivedLate++;
+			this->countMsgsArraivedLate++;
+			
+			while(this->lastMsgId + 1 < a1){
+				cout<<"Lost the Menssage "<<this->lastMsgId + 1<<endl;
+				this->lastMsgId++;
+			}
+			this->lastMsgId = a1;
+			
+			
 			
 		}else if( std::strcmp( m.AddressPattern(), (this->oscAddress+"/playBongo").c_str() ) == 0 ){
 			// example #1 -- argument stream interface
@@ -206,11 +216,23 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 											a);
 			this->insertMessage(rmm);
 			
-		}else if( std::strcmp( m.AddressPattern(), (this->oscAddress+"/show").c_str() ) == 0 ){
-			cout<<"Number of lost messagens because of delay in main loop "<<coutLostMsgs<<endl;
-			cout<<"Number of that arrived too late "<<coutMsgsArraivedLate<<endl;
 			
-			this->coutLostMsgs = 0;
+			while(this->lastMsgId + 1 < a1){
+				cout<<"Lost the Menssage "<<this->lastMsgId + 1<<endl;
+				this->lastMsgId++;
+			}
+			this->lastMsgId = a1;
+
+			
+		}else if( std::strcmp( m.AddressPattern(), (this->oscAddress+"/show").c_str() ) == 0 ){
+			cout<<"Number of lost messagens because of delay in main loop "<<countLostMsgs<<endl;
+			cout<<"Number of that arrived too late "<<countMsgsArraivedLate<<endl;
+			cout<<"Number of lost messages "<<countLostMsgsNet<<endl;
+			
+			this->countLostMsgs = 0;
+			this->lastMsgId = 0;
+			this->countMsgsArraivedLate = 0;
+			this->countLostMsgsNet = 0;
 		}
 	}catch( osc::Exception& e ){
 		// any parsing errors such as unexpected argument types, or 
@@ -248,7 +270,7 @@ void BongoBot::messageController(){
 				this->messages->erase(this->messages->begin());
 				this->nextRoboMusMessage = this->getNextMessage();
 				this->mtx.unlock();
-				this->coutLostMsgs++;
+				this->countLostMsgs++;
 			}else if(diff < -10000){
 				this->mtx.lock();
 				this->nextRoboMusMessage = this->getNextMessage();
