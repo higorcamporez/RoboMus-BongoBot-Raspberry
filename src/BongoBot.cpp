@@ -21,6 +21,9 @@ BongoBot::BongoBot(){
 	this->lastMsgId = 0;
 	this->countLostMsgsNet = 0;
 	
+	this->outFileError.open("log_error.txt");
+	this->outFileLog.open("log.txt");
+	
 	std::thread t(&BongoBot::messageController, this);
 	t.detach();
 	
@@ -187,12 +190,17 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			
 			args >> a1 >> a2 >> osc::EndMessage;
 			
-			cout<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;;
+			cout<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;
+			
+			this->outFileError<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;
+			
 			this->countMsgsArraivedLate++;
 			
 			while(this->lastMsgId + 1 < a1){
 				cout<<"Lost the Menssage "<<this->lastMsgId + 1<<endl;
+				this->outFileError<<"Lost the Menssage "<<this->lastMsgId + 1<<endl;
 				this->lastMsgId++;
+				this->countLostMsgsNet++;
 			}
 			this->lastMsgId = a1;
 			
@@ -207,7 +215,9 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			args >> a1 >> a2 >> osc::EndMessage;
 			
 			unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
+			
 			std::cout<<"/playBongo"<<" id = "<<a1<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
+			this->outFileLog<<"/playBongo"<<" id = "<<a1<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
 			
 			Action *a = new PlayBongo();
 			RoboMusMessage *rmm = new RoboMusMessage(
@@ -219,7 +229,9 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			
 			while(this->lastMsgId + 1 < a1){
 				cout<<"Lost the Menssage "<<this->lastMsgId + 1<<endl;
+				this->outFileError<<"Lost the Menssage "<<this->lastMsgId + 1<<endl;
 				this->lastMsgId++;
+				this->countLostMsgsNet++;
 			}
 			this->lastMsgId = a1;
 
@@ -229,10 +241,18 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			cout<<"Number of that arrived too late "<<countMsgsArraivedLate<<endl;
 			cout<<"Number of lost messages "<<countLostMsgsNet<<endl;
 			
+			this->outFileError<<"Number of lost messagens because of delay in main loop "<<countLostMsgs<<endl;
+			this->outFileError<<"Number of that arrived too late "<<countMsgsArraivedLate<<endl;
+			this->outFileError<<"Number of lost messages "<<countLostMsgsNet<<endl;
+			
 			this->countLostMsgs = 0;
 			this->lastMsgId = 0;
 			this->countMsgsArraivedLate = 0;
 			this->countLostMsgsNet = 0;
+			
+			this->outFileError.close();
+			this->outFileLog.close();
+			
 		}
 	}catch( osc::Exception& e ){
 		// any parsing errors such as unexpected argument types, or 
@@ -262,11 +282,15 @@ void BongoBot::messageController(){
 				this->mtx.lock();
 				this->messages->erase(this->messages->begin());
 				this->nextRoboMusMessage = this->getNextMessage();
+				//this->outFileLog<<"Play() "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
 				this->mtx.unlock();
+				
 			}else if(diff > 1000){
 				cout<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
+				
 				delete nextRoboMusMessage;
 				this->mtx.lock();
+				this->outFileError<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
 				this->messages->erase(this->messages->begin());
 				this->nextRoboMusMessage = this->getNextMessage();
 				this->mtx.unlock();

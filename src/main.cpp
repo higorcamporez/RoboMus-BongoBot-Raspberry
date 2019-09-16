@@ -9,10 +9,10 @@ int main(){
 	int which = PRIO_PROCESS;
 	id_t pid;
 	int priority = -20;
-	int ret;
+	//int ret;
 
 	pid = getpid();
-	ret = setpriority(which, pid, priority);
+	setpriority(which, pid, priority);
 	
 	
 	BongoBot *bongoBot = new BongoBot();

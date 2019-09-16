@@ -1,0 +1,3 @@
+Number of lost messagens because of delay in main loop 0
+Number of that arrived too late 0
+Number of lost messages 0

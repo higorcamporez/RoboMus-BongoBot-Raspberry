@@ -13,6 +13,7 @@
 #include <mutex>  
 #include <list>         
 #include <unistd.h>
+#include <fstream> 
 
 using namespace std;
 
@@ -25,6 +26,8 @@ class BongoBot : public Instrument, public osc::OscPacketListener {
 		int countMsgsArraivedLate;
 		int lastMsgId;
 		int countLostMsgsNet;
+		ofstream outFileError;
+		ofstream outFileLog;
 	public:
 		BongoBot();
 		~BongoBot();
