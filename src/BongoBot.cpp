@@ -11,9 +11,13 @@ BongoBot::BongoBot(){
 	this->sendPort = 1234;
 	this->ip = utils::getIpAddress();
 	this->familyType = "percussion";
-	this->specificProtocol = "</playBongo; velocity_i>";
+	this->specificProtocol = "</playBongo; velocity_i></show>";
 	
-	this->messages = new vector<RoboMusMessage*> ;
+	this->nextRoboMusMessage = NULL;
+	
+	this->messages = new list<RoboMusMessage*> ;
+	this->coutLostMsgs = 0;
+	this->coutMsgsArraivedLate = 0;
 	
 	std::thread t(&BongoBot::messageController, this);
 	t.detach();
@@ -53,7 +57,7 @@ void BongoBot::sendHandshake(){
     char broadcastIP[16];             /* IP broadcast address */
     unsigned short broadcastPort;     /* Server port */
     int broadcastPermission;          /* Socket opt to set permission to broadcast */
-    unsigned int sendStringLen;       /* Length of string to broadcast */
+    //unsigned int sendStringLen;       /* Length of string to broadcast */
     
     strcpy(broadcastIP, "255.255.255.255");            /* First arg:  broadcast IP address */ 
     broadcastPort = 1234;    /* Second arg:  broadcast port */
@@ -78,7 +82,7 @@ void BongoBot::sendHandshake(){
 
 	/* Broadcast sendString in datagram to clients every 3 seconds*/
     if (sendto(sock, p.Data(),  p.Size() , 0, (struct sockaddr *) 
-	   &broadcastAddr, sizeof(broadcastAddr)) != p.Size())
+	   &broadcastAddr, sizeof(broadcastAddr)) != (int)p.Size())
 		printf("sendto() sent a different number of bytes than expected");
 
     
@@ -148,30 +152,43 @@ void BongoBot::ProcessMessage( const osc::ReceivedMessage& m,
     }
 
 void BongoBot::insertMessage(RoboMusMessage *roboMusMessage){
+	
 	//std::cout<<"insertMessage"<<std::endl;
-	this->mtx.lock();
-	for (std::vector<RoboMusMessage*>::iterator it = this->messages->begin() ; it != this->messages->end(); ++it){
+	
+	for (std::list<RoboMusMessage*>::iterator it = this->messages->begin() ; it != this->messages->end(); ++it){
 		//std::cout << ' ' << (*it)->getTimetag();
 		//std::cout<<"insertMessage"<<std::endl;
 		if((*it)->getTimetag() > roboMusMessage->getTimetag()){
 			
-			this->messages->insert(it, roboMusMessage);	
+			this->messages->insert(it, roboMusMessage);
+			this->mtx.unlock();	
 			return;	
 		}
 	}
 	this->messages->push_back(roboMusMessage);
-	this->mtx.unlock();
+	
 	
 }
 
 void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			const IpEndpointName& remoteEndpoint )
 {
-
+	
 	osc::ReceivedMessage m = osc::ReceivedMessage(*b.ElementsBegin());
 	try{
-		
-		if( std::strcmp( m.AddressPattern(), (this->oscAddress+"/playBongo").c_str() ) == 0 ){
+		unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
+		if(time < utils::getCurrentTimeMicros()){
+			
+			osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
+			osc::int64 a1;
+			osc::int32 a2;
+			
+			args >> a1 >> a2 >> osc::EndMessage;
+			
+			cout<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;;
+			this->coutMsgsArraivedLate++;
+			
+		}else if( std::strcmp( m.AddressPattern(), (this->oscAddress+"/playBongo").c_str() ) == 0 ){
 			// example #1 -- argument stream interface
 			osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
 			osc::int64 a1;
@@ -180,7 +197,7 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			args >> a1 >> a2 >> osc::EndMessage;
 			
 			unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
-			std::cout<<"/playBongo"<<" id = "<<a1<<" TimeTag="<<time<<std::endl;
+			std::cout<<"/playBongo"<<" id = "<<a1<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
 			
 			Action *a = new PlayBongo();
 			RoboMusMessage *rmm = new RoboMusMessage(
@@ -188,7 +205,12 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 											a1,
 											a);
 			this->insertMessage(rmm);
-
+			
+		}else if( std::strcmp( m.AddressPattern(), (this->oscAddress+"/show").c_str() ) == 0 ){
+			cout<<"Number of lost messagens because of delay in main loop "<<coutLostMsgs<<endl;
+			cout<<"Number of that arrived too late "<<coutMsgsArraivedLate<<endl;
+			
+			this->coutLostMsgs = 0;
 		}
 	}catch( osc::Exception& e ){
 		// any parsing errors such as unexpected argument types, or 
@@ -202,26 +224,51 @@ void BongoBot::messageController(){
 	cout<<"BongoBot::messageController()"<<endl;
 	long long diff;
 	while(true){
-		this->mtx.lock();
-		if(this->messages->size() > 0){
-			RoboMusMessage* rmm = (*this->messages->begin());
+		
+		if(this->nextRoboMusMessage != NULL){
+			//this->mtx.lock();
+			//RoboMusMessage* rmm = (*this->messages->begin());
 			//cout<<rmm->getTimetag()<<" "<<utils::getCurrentTimeMicros()<<endl;
 			//std::cout<<"messageController"<<std::endl;
-			
-			diff = utils::getCurrentTimeMicros() - rmm->getTimetag();
+			//this->mtx.unlock();
+			diff = utils::getCurrentTimeMicros() - nextRoboMusMessage->getTimetag();
 			
 			if(diff >=0 && diff <= 1000){ //1000 us
 				
-				rmm->play();
-				delete rmm;
+				nextRoboMusMessage->play();
+				delete nextRoboMusMessage;
+				this->mtx.lock();
 				this->messages->erase(this->messages->begin());
+				this->nextRoboMusMessage = this->getNextMessage();
+				this->mtx.unlock();
 			}else if(diff > 1000){
-				cout<<"Message "<<rmm->getMessageId()<<" deleted"<<endl;
-				delete rmm;
+				cout<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
+				delete nextRoboMusMessage;
+				this->mtx.lock();
 				this->messages->erase(this->messages->begin());
+				this->nextRoboMusMessage = this->getNextMessage();
+				this->mtx.unlock();
+				this->coutLostMsgs++;
+			}else if(diff < -10000){
+				this->mtx.lock();
+				this->nextRoboMusMessage = this->getNextMessage();
+				this->mtx.unlock();
 			}
+			
+		}else{
+			this->mtx.lock();
+			this->nextRoboMusMessage = this->getNextMessage();
+			this->mtx.unlock();
 		}
-		this->mtx.unlock();
+		
+	}
+}
+RoboMusMessage* BongoBot::getNextMessage(){
+	
+	if(this->messages->size() > 0){
+		return *(this->messages->begin());
+	}else{
+		return NULL;
 	}
 }
 

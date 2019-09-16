@@ -1,10 +1,19 @@
 
 #include "BongoBot.h"
+#include <sys/resource.h>
 
 void pqp(){
 	std::cout<<"pqp"<<std::endl;
 }
 int main(){
+	int which = PRIO_PROCESS;
+	id_t pid;
+	int priority = -20;
+	int ret;
+
+	pid = getpid();
+	ret = setpriority(which, pid, priority);
+	
 	
 	BongoBot *bongoBot = new BongoBot();
 	

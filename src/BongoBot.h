@@ -10,14 +10,19 @@
 #include <iostream>
 #include <vector>
 #include <thread>  
-#include <mutex>         
+#include <mutex>  
+#include <list>         
+#include <unistd.h>
 
 using namespace std;
 
 class BongoBot : public Instrument, public osc::OscPacketListener {
 	private:
-		vector<RoboMusMessage*> *messages;
+		list<RoboMusMessage*> *messages;
+		RoboMusMessage *nextRoboMusMessage;
 		std::mutex mtx;
+		int coutLostMsgs;
+		int coutMsgsArraivedLate;
 	public:
 		BongoBot();
 		~BongoBot();
@@ -30,7 +35,9 @@ class BongoBot : public Instrument, public osc::OscPacketListener {
 		void playBongo(osc::ReceivedMessageArgumentStream args);
 		void insertMessage(RoboMusMessage*);
 		void messageController();
+		RoboMusMessage* getNextMessage();
 		void syncTime();
 		void timeSynchronizer();
+		
 		
 };
