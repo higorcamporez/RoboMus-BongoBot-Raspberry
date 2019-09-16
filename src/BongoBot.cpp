@@ -193,6 +193,7 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			cout<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;
 			
 			this->outFileError<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;
+			this->outFileLog<<m.AddressPattern()<<" id = "<<a1<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
 			
 			this->countMsgsArraivedLate++;
 			
