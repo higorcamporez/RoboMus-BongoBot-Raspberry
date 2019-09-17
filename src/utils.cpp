@@ -60,9 +60,13 @@ namespace utils{
 		return time;
 	}
 	
-	void NTPSynchronizer(string ntpServerIp){
+	void stopServiceNTP(){
 		system("sudo timedatectl set-ntp 0");
 		system("sudo service ntp stop");
+	}
+	
+	void NTPSynchronizer(string ntpServerIp){
+		
 		system(("sudo ntpdate "+ntpServerIp).c_str());
 		
 	}

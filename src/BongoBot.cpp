@@ -29,6 +29,7 @@ BongoBot::BongoBot(){
 	std::thread t(&BongoBot::messageController, this);
 	t.detach();
 	
+	utils::stopServiceNTP();
 	std::thread t2(&BongoBot::timeSynchronizer, this);
 	t2.detach();
 	
