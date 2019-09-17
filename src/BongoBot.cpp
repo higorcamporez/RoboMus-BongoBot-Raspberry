@@ -1,7 +1,7 @@
 #include "BongoBot.h"
 #define NTP_TIMESTAMP_DIFF   (2208988800) 
 #define IP_MTU_SIZE 1500
-
+#define DEBUG 
 
 BongoBot::BongoBot(){
 	
@@ -24,11 +24,16 @@ BongoBot::BongoBot(){
 	this->outFileError.open("log_error.txt");
 	this->outFileLog.open("log.txt");
 	
+	this->outFileLog<<"OscAddress, MessageId, MessageTime, CurrentTime"<<endl;
+	
 	std::thread t(&BongoBot::messageController, this);
 	t.detach();
 	
 	std::thread t2(&BongoBot::timeSynchronizer, this);
 	t2.detach();
+	
+	
+	
 	
 }
 
@@ -189,16 +194,18 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			osc::int32 a2;
 			
 			args >> a1 >> a2 >> osc::EndMessage;
-			
+			#ifdef DEBUG
 			cout<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;
-			
+			#endif
 			this->outFileError<<"The message "<<m.AddressPattern()<<" "<<a1<<" arrived too late"<<endl;
-			this->outFileLog<<m.AddressPattern()<<" id = "<<a1<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
+			this->outFileLog<<m.AddressPattern()<<","<<a1<<","<<time<<","<<utils::getCurrentTimeMicros()<<std::endl;
 			
 			this->countMsgsArraivedLate++;
 			
 			while(this->lastMsgId + 1 < a1){
+				#ifdef DEBUG
 				cout<<"Lost the Menssage "<<this->lastMsgId + 1<<endl;
+				#endif
 				this->outFileError<<"Lost the Menssage "<<this->lastMsgId + 1<<endl;
 				this->lastMsgId++;
 				this->countLostMsgsNet++;
@@ -217,8 +224,11 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			
 			unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
 			
+			#ifdef DEBUG
 			std::cout<<"/playBongo"<<" id = "<<a1<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
-			this->outFileLog<<"/playBongo"<<" id = "<<a1<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
+			#endif
+			
+			this->outFileLog<<m.AddressPattern()<<", "<<a1<<","<<time<<","<<utils::getCurrentTimeMicros()<<std::endl;
 			
 			Action *a = new PlayBongo();
 			RoboMusMessage *rmm = new RoboMusMessage(
@@ -283,12 +293,16 @@ void BongoBot::messageController(){
 				this->mtx.lock();
 				this->messages->erase(this->messages->begin());
 				this->nextRoboMusMessage = this->getNextMessage();
+				#ifdef DEBUG
+				cout<<"Play() "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
+				#endif
 				//this->outFileLog<<"Play() "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
 				this->mtx.unlock();
 				
 			}else if(diff > 1000){
+				#ifdef DEBUG
 				cout<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
-				
+				#endif
 				delete nextRoboMusMessage;
 				this->mtx.lock();
 				this->outFileError<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
