@@ -14,7 +14,10 @@ BongoBot::BongoBot(){
 	this->specificProtocol = "</playBongo; velocity_i></show>";
 	
 	this->nextRoboMusMessage = NULL;
-	
+	this->s = new UdpListeningReceiveSocket(
+            IpEndpointName( IpEndpointName::ANY_ADDRESS, this->receivePort ),
+            this );
+            
 	this->messages = new list<RoboMusMessage*> ;
 	this->countLostMsgs = 0;
 	this->countMsgsArraivedLate = 0;
@@ -33,13 +36,25 @@ BongoBot::BongoBot(){
 	std::thread t2(&BongoBot::timeSynchronizer, this);
 	t2.detach();
 	
+	std::thread t3(&BongoBot::sendHandshake, this);
+	t3.detach();
+	
 	
 	
 	
 }
 
 BongoBot::~BongoBot(){
-
+	delete s;
+	delete nextRoboMusMessage;
+	
+	for (std::list<RoboMusMessage*>::iterator it = this->messages->begin() ; it != this->messages->end(); ++it){
+		
+		delete (*it);
+			
+	}
+	
+	delete messages;
 }
 
 void BongoBot::sendHandshake(){
@@ -98,13 +113,17 @@ void BongoBot::sendHandshake(){
 
     
     /////////////////////////
+    /*
     UdpListeningReceiveSocket s(
             IpEndpointName( IpEndpointName::ANY_ADDRESS, this->receivePort ),
             this );
             
     std::cout << "press ctrl-c to end\n";
 	s.RunUntilSigInt();
+	std::cout << "pass\n";
+	* */
 	
+	s->RunUntilSigInt();
 }
 
 void BongoBot::receiveHandshake(osc::ReceivedMessageArgumentStream args){
@@ -123,6 +142,7 @@ void BongoBot::receiveHandshake(osc::ReceivedMessageArgumentStream args){
 	std::cout << "received '/handshake' message with arguments: "
                     << a1 << " " << a2 << " " << a3 << " " << a4 << "\n";
     this->syncTime();
+  
 }
 
 void BongoBot::ProcessMessage( const osc::ReceivedMessage& m, 
@@ -253,17 +273,18 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			cout<<"Number of that arrived too late "<<countMsgsArraivedLate<<endl;
 			cout<<"Number of lost messages "<<countLostMsgsNet<<endl;
 			
+			this->mtx.lock();
 			this->outFileError<<"Number of lost messagens because of delay in main loop "<<countLostMsgs<<endl;
 			this->outFileError<<"Number of that arrived too late "<<countMsgsArraivedLate<<endl;
 			this->outFileError<<"Number of lost messages "<<countLostMsgsNet<<endl;
+			this->mtx.unlock();
+			
 			
 			this->countLostMsgs = 0;
 			this->lastMsgId = 0;
 			this->countMsgsArraivedLate = 0;
 			this->countLostMsgsNet = 0;
 			
-			this->outFileError.close();
-			this->outFileLog.close();
 			
 		}
 	}catch( osc::Exception& e ){
@@ -290,23 +311,28 @@ void BongoBot::messageController(){
 			if(diff >=0 && diff <= 1000){ //1000 us
 				
 				nextRoboMusMessage->play();
+				#ifdef DEBUG
+				cout<<"Play() "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
+				#endif
 				delete nextRoboMusMessage;
 				this->mtx.lock();
 				this->messages->erase(this->messages->begin());
 				this->nextRoboMusMessage = this->getNextMessage();
-				#ifdef DEBUG
-				cout<<"Play() "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
-				#endif
+				
 				//this->outFileLog<<"Play() "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
 				this->mtx.unlock();
 				
 			}else if(diff > 1000){
+				this->mtx.lock();
+				
 				#ifdef DEBUG
 				cout<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
 				#endif
-				delete nextRoboMusMessage;
-				this->mtx.lock();
 				this->outFileError<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
+				
+				delete nextRoboMusMessage;
+				
+				
 				this->messages->erase(this->messages->begin());
 				this->nextRoboMusMessage = this->getNextMessage();
 				this->mtx.unlock();
@@ -350,4 +376,13 @@ void BongoBot::timeSynchronizer(){
 			}
 		}
 	}
+}
+
+void BongoBot::closeFiles(){
+	
+	this->mtx.lock();
+	this->outFileError.close();
+	this->outFileLog.close();
+	this->mtx.unlock();
+
 }

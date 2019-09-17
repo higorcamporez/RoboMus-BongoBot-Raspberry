@@ -15,19 +15,23 @@
 #include <unistd.h>
 #include <fstream> 
 
+
+
 using namespace std;
 
 class BongoBot : public Instrument, public osc::OscPacketListener {
 	private:
 		list<RoboMusMessage*> *messages;
 		RoboMusMessage *nextRoboMusMessage;
-		std::mutex mtx;
+		mutex mtx;
 		int countLostMsgs;
 		int countMsgsArraivedLate;
 		int lastMsgId;
 		int countLostMsgsNet;
 		ofstream outFileError;
 		ofstream outFileLog;
+		UdpListeningReceiveSocket *s;
+		
 	public:
 		BongoBot();
 		~BongoBot();
@@ -43,6 +47,7 @@ class BongoBot : public Instrument, public osc::OscPacketListener {
 		RoboMusMessage* getNextMessage();
 		void syncTime();
 		void timeSynchronizer();
+		void closeFiles();
 		
 		
 };

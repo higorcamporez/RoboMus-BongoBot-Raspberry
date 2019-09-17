@@ -1,10 +1,14 @@
 
 #include "BongoBot.h"
 #include <sys/resource.h>
+#include <signal.h>
 
-void pqp(){
-	std::cout<<"pqp"<<std::endl;
+void my_handler(int s){
+           printf("Caught signal %d\n",s);
+           exit(1); 
+
 }
+
 int main(){
 	int which = PRIO_PROCESS;
 	id_t pid;
@@ -14,11 +18,17 @@ int main(){
 	pid = getpid();
 	setpriority(which, pid, priority);
 	
+	signal (SIGINT,my_handler);
 	
 	BongoBot *bongoBot = new BongoBot();
 	
 	//cout<<"-"<<bongoBot->getServerIpAddress()<<"-"<<bongoBot->getServerIpAddress().length()<<endl;
-	bongoBot->sendHandshake();
-	while(true);
+	//bongoBot->sendHandshake();
+	int a;
+	cin>>a;
+	
+	bongoBot->closeFiles();
+	delete bongoBot;
+	
 	return 0;
 }
