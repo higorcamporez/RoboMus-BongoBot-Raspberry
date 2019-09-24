@@ -31,6 +31,7 @@ class BongoBot : public Instrument, public osc::OscPacketListener {
 		ofstream outFileError;
 		ofstream outFileLog;
 		UdpListeningReceiveSocket *s;
+		UdpTransmitSocket *transmitSocket;
 		
 	public:
 		BongoBot();

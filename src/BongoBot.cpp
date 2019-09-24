@@ -17,12 +17,14 @@ BongoBot::BongoBot(){
 	this->s = new UdpListeningReceiveSocket(
             IpEndpointName( IpEndpointName::ANY_ADDRESS, this->receivePort ),
             this );
+    
             
 	this->messages = new list<RoboMusMessage*> ;
 	this->countLostMsgs = 0;
 	this->countMsgsArraivedLate = 0;
 	this->lastMsgId = 0;
 	this->countLostMsgsNet = 0;
+	
 	
 	this->outFileError.open("log_error.txt");
 	this->outFileLog.open("log.txt");
@@ -40,8 +42,6 @@ BongoBot::BongoBot(){
 	t3.detach();
 	
 	
-	
-	
 }
 
 BongoBot::~BongoBot(){
@@ -55,6 +55,9 @@ BongoBot::~BongoBot(){
 	}
 	
 	delete messages;
+	
+	delete transmitSocket;
+	delete s;
 }
 
 void BongoBot::sendHandshake(){
@@ -139,6 +142,10 @@ void BongoBot::receiveHandshake(osc::ReceivedMessageArgumentStream args){
 	this->serverIpAddress = a3;
 	this->sendPort = a4;
 	
+	this->transmitSocket = new UdpTransmitSocket(
+				IpEndpointName( this->serverIpAddress.c_str(), this->sendPort )
+			);
+	
 	std::cout << "received '/handshake' message with arguments: "
                     << a1 << " " << a2 << " " << a3 << " " << a4 << "\n";
     this->syncTime();
@@ -192,7 +199,7 @@ void BongoBot::insertMessage(RoboMusMessage *roboMusMessage){
 		if((*it)->getTimetag() > roboMusMessage->getTimetag()){
 			
 			this->messages->insert(it, roboMusMessage);
-			this->mtx.unlock();	
+			//this->mtx.unlock();	
 			return;	
 		}
 	}
@@ -251,7 +258,13 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			
 			this->outFileLog<<m.AddressPattern()<<", "<<a1<<","<<time<<","<<utils::getCurrentTimeMicros()<<std::endl;
 			
-			Action *a = new PlayBongo();
+			Action *a = new PlayBongo(
+										this->transmitSocket,
+										a1,
+										this->serverOscAddress,
+										this->oscAddress
+									);
+			
 			RoboMusMessage *rmm = new RoboMusMessage(
 											time,
 											a1,
@@ -312,15 +325,17 @@ void BongoBot::messageController(){
 				
 				nextRoboMusMessage->play();
 				#ifdef DEBUG
-				cout<<"Play() "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
+				cout<<"Play() id = "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
 				#endif
-				delete nextRoboMusMessage;
+				
 				this->mtx.lock();
 				this->messages->erase(this->messages->begin());
+				delete nextRoboMusMessage;
+				this->mtx.unlock();
 				this->nextRoboMusMessage = this->getNextMessage();
 				
 				//this->outFileLog<<"Play() "<<nextRoboMusMessage->getMessageId()<<" "<<diff<<endl;
-				this->mtx.unlock();
+				
 				
 			}else if(diff > 1000){
 				this->mtx.lock();
@@ -328,6 +343,7 @@ void BongoBot::messageController(){
 				#ifdef DEBUG
 				cout<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
 				#endif
+				
 				this->outFileError<<"M: "<<nextRoboMusMessage->getMessageId()<<" deleted "<<diff<<endl;
 				
 				delete nextRoboMusMessage;
@@ -335,8 +351,9 @@ void BongoBot::messageController(){
 				
 				this->messages->erase(this->messages->begin());
 				this->nextRoboMusMessage = this->getNextMessage();
-				this->mtx.unlock();
+				
 				this->countLostMsgs++;
+				this->mtx.unlock();
 			}else if(diff < -10000){
 				this->mtx.lock();
 				this->nextRoboMusMessage = this->getNextMessage();
