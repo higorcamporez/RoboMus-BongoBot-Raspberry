@@ -61,7 +61,7 @@ void PlayBongo::watingBeat(){
 	
 	while(utils::getCurrentTimeMicros() - ini < 2000000) //espera no maximo um segundo
 	{
-		if(digitalRead(1) == 1)
+		if(digitalRead(1) == 0)
 		{	
 			delay = utils::getCurrentTimeMicros() - startTime;
 			break;

@@ -11,7 +11,7 @@
 class PlayBongo : public Action{
 	private:
 		UdpTransmitSocket *transmitSocket;
-		long messageId;
+		osc::int64 messageId;
 		string serverOscAddress;
 		string instrumentOscAddres;
 		thread *threadObj;

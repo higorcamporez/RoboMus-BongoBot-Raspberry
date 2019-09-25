@@ -1,11 +1,6 @@
-M: 7 deleted 14217
-M: 8 deleted 4219
-Number of lost messagens because of delay in main loop 2
+Number of lost messagens because of delay in main loop 0
 Number of that arrived too late 0
 Number of lost messages 0
-M: 4 deleted 6222
-M: 6 deleted 6218
-M: 9 deleted 6218
-Number of lost messagens because of delay in main loop 3
+Number of lost messagens because of delay in main loop 0
 Number of that arrived too late 0
 Number of lost messages 0
