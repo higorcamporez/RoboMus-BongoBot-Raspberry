@@ -11,7 +11,7 @@ BongoBot::BongoBot(){
 	this->sendPort = 1234;
 	this->ip = utils::getIpAddress();
 	this->familyType = "percussion";
-	this->specificProtocol = "</playBongo; velocity_i></show>";
+	this->specificProtocol = "</playBongo;velocity_i>";
 	
 	this->nextRoboMusMessage = NULL;
 	this->s = new UdpListeningReceiveSocket(
@@ -114,7 +114,7 @@ void BongoBot::sendHandshake(){
 	   &broadcastAddr, sizeof(broadcastAddr)) != (int)p.Size())
 		printf("sendto() sent a different number of bytes than expected");
 
-    
+    close(sock);
     /////////////////////////
     /*
     UdpListeningReceiveSocket s(
@@ -259,10 +259,11 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			this->outFileLog<<m.AddressPattern()<<", "<<a1<<","<<time<<","<<utils::getCurrentTimeMicros()<<std::endl;
 			
 			Action *a = new PlayBongo(
-										this->transmitSocket,
 										a1,
+										this->oscAddress,
 										this->serverOscAddress,
-										this->oscAddress
+										this->sendPort,
+										this->serverIpAddress
 									);
 			
 			RoboMusMessage *rmm = new RoboMusMessage(
