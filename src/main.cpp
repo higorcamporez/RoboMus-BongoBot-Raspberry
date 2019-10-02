@@ -20,6 +20,9 @@ int main(){
 	
 	signal (SIGINT,my_handler);
 	
+	
+
+
 	BongoBot *bongoBot = new BongoBot();
 	
 	//cout<<"-"<<bongoBot->getServerIpAddress()<<"-"<<bongoBot->getServerIpAddress().length()<<endl;

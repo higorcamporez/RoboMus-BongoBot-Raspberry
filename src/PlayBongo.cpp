@@ -53,8 +53,6 @@ PlayBongo::~PlayBongo(){
 void PlayBongo::playInstrument(){
 	
 	
-	
-	long long  actionDelay = -1;
 	this->threadObjWaiting = new thread(&PlayBongo::watingBeat, this);
 	
 	this->threadObjWaiting->detach();
@@ -62,40 +60,11 @@ void PlayBongo::playInstrument(){
 	//this->watingBeat();
 	
 	this->startTime = utils::getCurrentTimeMicros();
+
+	if("b8:27:eb:fd:6b:df" != utils::getMacAddress()){
+		delay(100);
+	}
 	digitalWrite(0, 1);
-	/*
-	while(utils::getCurrentTimeMicros() - startTime < 100000) //espera no maximo um segundo
-	{
-		if(digitalRead(1) == 0)
-		{	
-			actionDelay = utils::getCurrentTimeMicros() - this->startTime;
-			break;
-		}
-	}
-	
-	if(actionDelay > 0 ){
-		
-		char buffer[OUTPUT_BUFFER_SIZE];
-		osc::OutboundPacketStream p( buffer, OUTPUT_BUFFER_SIZE );
-
-		p << osc::BeginMessage( (serverOscAddress+"/delay"+instrumentOscAddres).c_str() )
-			<< this->messageId
-			<< actionDelay 
-			<< osc::EndMessage;
-
-	
-		//this->transmitSocket->Send( p.Data(), p.Size() );
-
-		
-		#ifdef DEBUG
-		std::cout<<"Message "<<this->messageId<<" spent "<<actionDelay<<" us"<<std::endl;
-		#endif
-	}else{
-		#ifdef DEBUG
-		std::cout<<"Timeout to message "<<this->messageId<<std::endl;
-		#endif
-	}
-	*/
 	delay(30);
 	digitalWrite(0, 0);		
 	

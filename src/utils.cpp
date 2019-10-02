@@ -70,4 +70,33 @@ namespace utils{
 		system(("sudo ntpdate "+ntpServerIp).c_str());
 		
 	}
+	
+	string getMacAddress()
+	{
+		 int fd;
+		
+		struct ifreq ifr;
+		char iface[6];
+		strcpy(iface,"wlan0");
+		char *mac;
+		char uc_Mac[32];
+		
+		fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+		ifr.ifr_addr.sa_family = AF_INET;
+		strncpy((char *)ifr.ifr_name , (const char *)iface , IFNAMSIZ-1);
+
+		ioctl(fd, SIOCGIFHWADDR, &ifr);
+
+		close(fd);
+		
+		mac = (char *)ifr.ifr_hwaddr.sa_data;
+		
+		//display mac address
+		sprintf((char *)uc_Mac,(const char *)"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n" , mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		
+		
+		string s = uc_Mac;
+		return s;
+	}
 }

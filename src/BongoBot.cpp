@@ -4,9 +4,17 @@
 #define DEBUG 
 
 BongoBot::BongoBot(){
+
+	string mac = utils::getMacAddress();
+	cout<<"mac = "<<mac;
+	if("b8:27:eb:fd:6b:df" == mac){
+		this->name = "BongoBot";
+		this->oscAddress = "/BongoBot";
+	}else{
+		this->name = "BongoBot2";
+		this->oscAddress = "/BongoBot2";
+	}
 	
-	this->name = "BongoBot";
-	this->oscAddress = "/BongoBot";
 	this->receivePort = 1234;
 	this->sendPort = 1234;
 	this->ip = utils::getIpAddress();
