@@ -7,7 +7,7 @@ BongoBot::BongoBot(){
 
 	string mac = utils::getMacAddress();
 	cout<<"mac = "<<mac;
-	if(mac.compare("b8:27:eb:fd:6b:df")){
+	if(mac.compare("b8:27:eb:fd:6b:df")==0){
 		this->name = "BongoBot";
 		this->oscAddress = "/BongoBot";
 	}else{

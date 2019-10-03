@@ -63,7 +63,7 @@ void PlayBongo::playInstrument(){
 	
 	string mac = utils::getMacAddress();
 	
-	if(mac.compare("b8:27:eb:fd:6b:df")){
+	if(mac.compare("b8:27:eb:fd:6b:df")==0){
 		delay(100);
 	}
 	digitalWrite(0, 1);
