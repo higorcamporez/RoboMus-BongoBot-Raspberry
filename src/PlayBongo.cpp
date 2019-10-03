@@ -13,7 +13,7 @@ PlayBongo::PlayBongo(
 	wiringPiSetup();			// Setup the library
 	pinMode(0, OUTPUT);		// Configure GPIO0 as an output
 	pinMode(1, INPUT);	
-	
+	//pinMode(4, INPUT);	
 	this->messageId = messageId;
 	this->serverOscAddress = serverOscAddress;
 	this->instrumentOscAddres = instrumentOscAddres;
@@ -57,19 +57,19 @@ void PlayBongo::playInstrument(){
 	
 	this->threadObjWaiting->detach();
 	
-	//this->watingBeat();
 	
-	this->startTime = utils::getCurrentTimeMicros();
 	
 	string mac = utils::getMacAddress();
 	
-	if(mac.compare("b8:27:eb:fd:6b:df")==0){
+	this->startTime = utils::getCurrentTimeMicros();
+	
+	if(mac.compare("b8:27:eb:fd:6b:df")!=0){
 		delay(100);
 	}
-	digitalWrite(0, 1);
-	delay(30);
+	digitalWrite(0, 1);		
+	delay(25);
 	digitalWrite(0, 0);		
-	
+
 }
 
 void PlayBongo::watingBeat(){
@@ -89,7 +89,7 @@ void PlayBongo::watingBeat(){
 	}
 
 
-	if(actionDelay > 0 ){
+	if(actionDelay > 10000 ){
 		
 		char buffer[OUTPUT_BUFFER_SIZE];
 		osc::OutboundPacketStream p( buffer, OUTPUT_BUFFER_SIZE );
