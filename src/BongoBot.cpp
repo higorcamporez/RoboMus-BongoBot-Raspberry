@@ -7,14 +7,14 @@ BongoBot::BongoBot(){
 
 	string mac = utils::getMacAddress();
 	cout<<"mac = "<<mac;
-	if("b8:27:eb:fd:6b:df" == mac){
+	if(mac.compare("b8:27:eb:fd:6b:df")){
 		this->name = "BongoBot";
 		this->oscAddress = "/BongoBot";
 	}else{
 		this->name = "BongoBot2";
 		this->oscAddress = "/BongoBot2";
 	}
-	
+	cout<<this->name;
 	this->receivePort = 1234;
 	this->sendPort = 1234;
 	this->ip = utils::getIpAddress();

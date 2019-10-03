@@ -60,8 +60,10 @@ void PlayBongo::playInstrument(){
 	//this->watingBeat();
 	
 	this->startTime = utils::getCurrentTimeMicros();
-
-	if("b8:27:eb:fd:6b:df" != utils::getMacAddress()){
+	
+	string mac = utils::getMacAddress();
+	
+	if(mac.compare("b8:27:eb:fd:6b:df")){
 		delay(100);
 	}
 	digitalWrite(0, 1);
