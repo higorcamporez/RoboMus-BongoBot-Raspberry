@@ -25,6 +25,7 @@ namespace utils{
 	unsigned long long getCurrentTimeMicros();
 	unsigned long long convertNTPtoUTC(unsigned long long timestamp);
 	void NTPSynchronizer(string ntpServerIp);
+	void SNTPSynchronizer(string ntpServerIp);
 	void stopServiceNTP();
 	string getMacAddress();
 }

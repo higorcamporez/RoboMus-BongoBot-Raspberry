@@ -1,20 +1,22 @@
-#include "PlayBongo.h"
+#include "PlayBongoPwm.h"
 #define OUTPUT_BUFFER_SIZE 1024
 #define DEBUG 
 
-PlayBongo::PlayBongo(
+PlayBongoPwm::PlayBongoPwm(
 						long messageId,
+						long pwmValue,
 						string instrumentOscAddres,
 						string serverOscAddress,
 						int serverPort,
 						string serverIpAddress
 					){
 					
-	wiringPiSetup();			// Setup the library
-	pinMode(0, OUTPUT);		// Configure GPIO0 as an output
-	pinMode(1, INPUT);	
+	wiringPiSetup();		
+	pinMode(0, INPUT);		
+	pinMode(1, PWM_OUTPUT);	
 	//pinMode(4, INPUT);	
 	this->messageId = messageId;
+	this->pwmValue = pwmValue;
 	this->serverOscAddress = serverOscAddress;
 	this->instrumentOscAddres = instrumentOscAddres;
 	this->serverIpAddress = serverIpAddress;
@@ -39,7 +41,7 @@ PlayBongo::PlayBongo(
 
 
 
-PlayBongo::~PlayBongo(){
+PlayBongoPwm::~PlayBongoPwm(){
 	if(this->threadObj != NULL){
 		delete this->threadObj;
 	}
@@ -50,12 +52,12 @@ PlayBongo::~PlayBongo(){
 	
 }
 
-void PlayBongo::playInstrument(){
+void PlayBongoPwm::playInstrument(){
 	
 	
-	//this->threadObjWaiting = new thread(&PlayBongo::watingBeat, this);
+	this->threadObjWaiting = new thread(&PlayBongoPwm::watingBeat, this);
 	
-	//this->threadObjWaiting->detach();
+	this->threadObjWaiting->detach();
 	
 	
 	
@@ -66,24 +68,25 @@ void PlayBongo::playInstrument(){
 	if(mac.compare("b8:27:eb:fd:6b:df")!=0){
 		delay(100);
 	}
-	digitalWrite(0, 1);		
-	delay(25);
-	digitalWrite(0, 0);		
+	pwmWrite(1, this->pwmValue);		
+	delay(200);
+	pwmWrite(1, 0);		
 
 }
 
-void PlayBongo::watingBeat(){
+void PlayBongoPwm::watingBeat(){
 	#ifdef DEBUG
-	std::cout<<"PlayBongo::watingBeat() "<<std::endl;
+	std::cout<<"PlayBongoPwm::watingBeat() "<<std::endl;
 	#endif
 	unsigned long long ini = utils::getCurrentTimeMicros();
 	long long  actionDelay = -1;
 	
-	while(utils::getCurrentTimeMicros() - ini < 50000) //espera no maximo um segundo
+	while(utils::getCurrentTimeMicros() - ini < 300000) //espera no maximo .3 segundo
 	{
-		if(digitalRead(1) == 0)
+		if(digitalRead(0) == 0)
 		{	
 			actionDelay = utils::getCurrentTimeMicros() - startTime;
+			pwmWrite(1, 0);
 			break;
 		}
 	}
@@ -118,7 +121,7 @@ void PlayBongo::watingBeat(){
 	
 }
 
-void PlayBongo::sendDelay(){
+void PlayBongoPwm::sendDelay(){
 	
 	char buffer[OUTPUT_BUFFER_SIZE];
 	osc::OutboundPacketStream p( buffer, OUTPUT_BUFFER_SIZE );
@@ -144,11 +147,11 @@ void PlayBongo::sendDelay(){
 	
 }
 
-void PlayBongo::play(){
+void PlayBongoPwm::play(){
 	
-	std::cout<<"playBongo::play()"<<std::endl;
+	std::cout<<"PlayBongoPwm::play()"<<std::endl;
 	playInstrument();
-	//this->threadObj = new thread(&PlayBongo::playInstrument, this);
-	//this->threadObj = new thread(&PlayBongo::sendDelay, this);
+	//this->threadObj = new thread(&PlayBongoPwm::playInstrument, this);
+	//this->threadObj = new thread(&PlayBongoPwm::sendDelay, this);
 	//this->threadObj->detach();
 }

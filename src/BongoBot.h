@@ -1,6 +1,7 @@
 #include "Instrument.h"
 //#include "RoboMusMessage.h"
-#include "PlayBongo.h"
+//#include "PlayBongo.h"
+#include "PlayBongoPwm.h"
 #include "utils.h"
 #include "osc/OscOutboundPacketStream.h"
 #include "osc/OscReceivedElements.h"

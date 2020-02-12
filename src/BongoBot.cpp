@@ -42,9 +42,11 @@ BongoBot::BongoBot(){
 	std::thread t(&BongoBot::messageController, this);
 	t.detach();
 	
+	//thread para fazer sincronia de tempo
 	utils::stopServiceNTP();
 	std::thread t2(&BongoBot::timeSynchronizer, this);
 	t2.detach();
+	
 	
 	std::thread t3(&BongoBot::sendHandshake, this);
 	t3.detach();
@@ -261,13 +263,14 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
 			
 			#ifdef DEBUG
-			std::cout<<"/playBongo"<<" id = "<<a1<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
+			std::cout<<"/playBongo"<<" id = "<<a1<<" pwm = "<<a2<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
 			#endif
 			
 			this->outFileLog<<m.AddressPattern()<<", "<<a1<<","<<time<<","<<utils::getCurrentTimeMicros()<<std::endl;
 			
-			Action *a = new PlayBongo(
+			Action *a = new PlayBongoPwm(
 										a1,
+										a2,
 										this->oscAddress,
 										this->serverOscAddress,
 										this->sendPort,
@@ -387,20 +390,25 @@ RoboMusMessage* BongoBot::getNextMessage(){
 }
 
 void BongoBot::syncTime(){
-	utils::NTPSynchronizer(this->getServerIpAddress());
+	//utils::NTPSynchronizer(this->getServerIpAddress());
+	utils::SNTPSynchronizer(this->getServerIpAddress());
 }
 
 void BongoBot::timeSynchronizer(){
 	long long t = 0;
 	while(true){
 		
-		while(utils::getCurrentTimeMillis() - t > 20000){
+		while(utils::getCurrentTimeMillis() - t > 30000){
 			if(this->getServerIpAddress().length() > 0){
 				this->syncTime();
 				t = utils::getCurrentTimeMillis();
 				//cout<<"t="<<t<<endl;
+				
 			}
+			delay(1);
 		}
+		
+		
 	}
 }
 

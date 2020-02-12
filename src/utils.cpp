@@ -71,6 +71,10 @@ namespace utils{
 		
 	}
 	
+	void SNTPSynchronizer(string ntpServerIp){
+		system(("sudo sntp -S "+ntpServerIp).c_str());
+	}
+	
 	string getMacAddress()
 	{
 		 int fd;
