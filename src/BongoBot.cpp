@@ -19,7 +19,7 @@ BongoBot::BongoBot(){
 	this->sendPort = 1234;
 	this->ip = utils::getIpAddress();
 	this->familyType = "percussion";
-	this->specificProtocol = "</playBongo;velocity_i>";
+	this->specificProtocol = "</playBongo;solenoid_i;velocity_f>";
 	
 	this->nextRoboMusMessage = NULL;
 	this->s = new UdpListeningReceiveSocket(
@@ -255,15 +255,16 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 		}else if( std::strcmp( m.AddressPattern(), (this->oscAddress+"/playBongo").c_str() ) == 0 ){
 			// example #1 -- argument stream interface
 			osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
-			osc::int64 a1;
-			osc::int32 a2;
+			osc::int64 a1; //id
+			osc::int32 a2; //solenoide 0->central e 1->lateral
+			float a3; //intensidade
 			
-			args >> a1 >> a2 >> osc::EndMessage;
+			args >> a1 >> a2 >> a3 >>osc::EndMessage;
 			
 			unsigned long long time = utils::convertNTPtoUTC(b.TimeTag());
 			
 			#ifdef DEBUG
-			std::cout<<"/playBongo"<<" id = "<<a1<<" pwm = "<<a2<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
+			std::cout<<"/playBongo"<<" id = "<<a1<<" solenoide = "<<a2<<" pwm = "<<a3<<" TimeTag="<<time<<" "<<utils::getCurrentTimeMicros()<<std::endl;
 			#endif
 			
 			this->outFileLog<<m.AddressPattern()<<", "<<a1<<","<<time<<","<<utils::getCurrentTimeMicros()<<std::endl;
@@ -271,6 +272,7 @@ void BongoBot::ProcessBundle( const osc::ReceivedBundle& b,
 			Action *a = new PlayBongoPwm(
 										a1,
 										a2,
+										a3,
 										this->oscAddress,
 										this->serverOscAddress,
 										this->sendPort,

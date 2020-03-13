@@ -4,19 +4,26 @@
 
 PlayBongoPwm::PlayBongoPwm(
 						long messageId,
-						long pwmValue,
+						int solenoid,
+						float velocity,
 						string instrumentOscAddres,
 						string serverOscAddress,
 						int serverPort,
 						string serverIpAddress
 					){
-					
+	//0->central que esta no pino 1; 1->lateral pino 23
+	if(solenoid == 0){
+		this->pinOutputPort = 1;
+	}else{
+		this->pinOutputPort = 23;
+	}
+
 	wiringPiSetup();		
 	pinMode(0, INPUT);		
-	pinMode(1, PWM_OUTPUT);	
-	//pinMode(4, INPUT);	
+	pinMode(pinOutputPort, PWM_OUTPUT);	
+	
 	this->messageId = messageId;
-	this->pwmValue = pwmValue;
+	this->pwmValue = (int) (velocity*523+500);
 	this->serverOscAddress = serverOscAddress;
 	this->instrumentOscAddres = instrumentOscAddres;
 	this->serverIpAddress = serverIpAddress;
@@ -24,7 +31,6 @@ PlayBongoPwm::PlayBongoPwm(
 	
 	this->threadObj = NULL;
 	this->threadObjWaiting = NULL; 
-	
 
     
     /* Create socket for sending datagrams */
@@ -68,9 +74,9 @@ void PlayBongoPwm::playInstrument(){
 	if(mac.compare("b8:27:eb:fd:6b:df")!=0){
 		delay(100);
 	}
-	pwmWrite(1, this->pwmValue);		
-	delay(200);
-	pwmWrite(1, 0);		
+	pwmWrite(pinOutputPort, this->pwmValue);
+	delay(50);
+	pwmWrite(pinOutputPort, 0);		
 
 }
 
@@ -83,10 +89,10 @@ void PlayBongoPwm::watingBeat(){
 	
 	while(utils::getCurrentTimeMicros() - ini < 300000) //espera no maximo .3 segundo
 	{
-		if(digitalRead(0) == 0)
+		if(digitalRead(0) == 1)
 		{	
 			actionDelay = utils::getCurrentTimeMicros() - startTime;
-			pwmWrite(1, 0);
+			pwmWrite(pinOutputPort, 0);	
 			break;
 		}
 	}

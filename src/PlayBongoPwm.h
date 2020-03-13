@@ -10,10 +10,12 @@
 #include <mutex>
 #include <unistd.h> 
 
+
 class PlayBongoPwm : public Action{
 	private:
 		
 		osc::int64 messageId;
+		int pinOutputPort;
 		osc::int64 pwmValue;
 		string serverOscAddress;
 		string instrumentOscAddres;
@@ -30,7 +32,8 @@ class PlayBongoPwm : public Action{
 	
 		PlayBongoPwm(
 					long messageId,
-					long pwmValue,
+					int solenoid,
+					float velocity,
 					string instrumentOscAddres,
 					string serverOscAddress,
 					int serverPort,
